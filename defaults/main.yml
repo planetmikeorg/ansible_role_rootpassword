@@ -1,0 +1,15 @@
+---
+# 1Password Connect Server URL (can also be set via OP_CONNECT_HOST env var)
+onepassword_connect_host: "{{ lookup('env', 'OP_CONNECT_HOST') }}"
+
+# 1Password Connect API token (can also be set via OP_CONNECT_TOKEN env var)
+onepassword_connect_token: "{{ lookup('env', 'OP_CONNECT_TOKEN') }}"
+
+# Name of the 1Password vault to store the root password item in
+onepassword_vault: "{{ lookup('env', 'OP_VAULT') | default('Private', true) }}"
+
+# Title of the 1Password Login/Password item to create or update
+onepassword_item_title: "Root Password - {{ inventory_hostname }}"
+
+# Length of the generated root password
+rootpassword_length: 32
