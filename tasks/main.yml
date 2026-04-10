@@ -1,0 +1,38 @@
+---
+- name: Generate a random root password
+  ansible.builtin.set_fact:
+    rootpassword_plain: "{{ lookup('ansible.builtin.password', '/dev/null',
+      length=rootpassword_length,
+      chars=['ascii_letters', 'digits', '.,:-_']) }}"
+  no_log: true
+
+- name: Hash the new root password
+  ansible.builtin.set_fact:
+    rootpassword_hash: "{{ rootpassword_plain | password_hash('sha512') }}"
+  no_log: true
+
+- name: Apply the new root password on the system
+  ansible.builtin.user:
+    name: root
+    password: "{{ rootpassword_hash }}"
+    update_password: always
+  no_log: true
+
+- name: Update (or create) root password item in 1Password
+  onepassword.connect.item:
+    title: "{{ onepassword_item_title }}"
+    vault: "{{ onepassword_vault }}"
+    state: present
+    connect_host: "{{ onepassword_connect_host }}"
+    connect_token: "{{ onepassword_connect_token }}"
+    fields:
+      - label: username
+        value: root
+        field_type: STRING
+      - label: password
+        value: "{{ rootpassword_plain }}"
+        field_type: CONCEALED
+      - label: hostname
+        value: "{{ inventory_hostname }}"
+        field_type: STRING
+  no_log: true

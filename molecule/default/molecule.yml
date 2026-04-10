@@ -1,0 +1,25 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: docker
+
+platforms:
+  - name: instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    command: /lib/systemd/systemd
+    privileged: true
+    pre_build_image: true
+
+provisioner:
+  name: ansible
+  env:
+    OP_CONNECT_HOST: "${OP_CONNECT_HOST:-http://localhost:8080}"
+    OP_CONNECT_TOKEN: "${OP_CONNECT_TOKEN:-test-token}"
+    OP_VAULT: "${OP_VAULT:-Private}"
+
+verifier:
+  name: ansible

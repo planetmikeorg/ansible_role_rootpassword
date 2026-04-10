@@ -1,0 +1,34 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Verify root account exists and password is set
+      ansible.builtin.command: getent passwd root
+      register: root_entry
+      changed_when: false
+
+    - name: Assert root entry was returned
+      ansible.builtin.assert:
+        that:
+          - root_entry.rc == 0
+          - root_entry.stdout | length > 0
+        fail_msg: "root account was not found in /etc/passwd"
+        success_msg: "root account exists"
+
+    - name: Verify root password hash is not the default locked value
+      ansible.builtin.shell:
+        cmd: "getent shadow root | cut -d: -f2"
+      register: root_shadow
+      changed_when: false
+      no_log: true
+
+    - name: Assert root password hash is set (not locked or empty)
+      ansible.builtin.assert:
+        that:
+          - root_shadow.stdout != "!"
+          - root_shadow.stdout != "*"
+          - root_shadow.stdout | length > 0
+        fail_msg: "Root password is locked or not set"
+        success_msg: "Root password hash is present"
