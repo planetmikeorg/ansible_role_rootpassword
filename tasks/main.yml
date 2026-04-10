@@ -1,4 +1,24 @@
 ---
+- name: Validate role inputs and target OS
+  ansible.builtin.assert:
+    that:
+      - ansible_os_family == "RedHat"
+      - onepassword_connect_host | length > 0
+      - onepassword_connect_token | length > 0
+      - onepassword_vault | length > 0
+      - rootpassword_length | int >= 16
+    fail_msg: >-
+      This role requires a RHEL-family host plus 1Password Connect settings
+      (host, token, and vault).
+    success_msg: Target host and role inputs are valid for root password rotation.
+
+- name: Capture current root password hash
+  ansible.builtin.shell:
+    cmd: "getent shadow root | cut -d: -f2"
+  register: rootpassword_hash_before
+  changed_when: false
+  no_log: true
+
 - name: Generate a random root password
   ansible.builtin.set_fact:
     rootpassword_plain: "{{ lookup('ansible.builtin.password', '/dev/null',
@@ -16,6 +36,23 @@
     name: root
     password: "{{ rootpassword_hash }}"
     update_password: always
+  no_log: true
+
+- name: Capture updated root password hash
+  ansible.builtin.shell:
+    cmd: "getent shadow root | cut -d: -f2"
+  register: rootpassword_hash_after
+  changed_when: false
+  no_log: true
+
+- name: Assert root password was rotated
+  ansible.builtin.assert:
+    that:
+      - rootpassword_hash_after.stdout == rootpassword_hash
+      - rootpassword_hash_after.stdout | length > 0
+      - rootpassword_hash_after.stdout != rootpassword_hash_before.stdout
+    fail_msg: Root password hash did not rotate as expected.
+    success_msg: Root password hash rotated successfully.
   no_log: true
 
 - name: Update (or create) root password item in 1Password

@@ -1,6 +1,6 @@
 # ansible_role_rootpassword
 
-An Ansible role that rotates the root password on Linux hosts and stores the new password in **1Password** using the [onepassword.connect](https://galaxy.ansible.com/onepassword/connect) Ansible Collection.
+An Ansible role that rotates the root password on **RHEL-family** hosts and stores the new password in **1Password** using the [onepassword.connect](https://galaxy.ansible.com/onepassword/connect) Ansible Collection.
 
 > **No 1Password CLI client required.** All interaction with 1Password is done through the [1Password Connect Server](https://developer.1password.com/docs/connect/) REST API via the official `onepassword.connect` collection.
 
@@ -14,6 +14,8 @@ An Ansible role that rotates the root password on Linux hosts and stores the new
 | Ansible Collection | `onepassword.connect >= 2.0.0` (see [requirements.yml](requirements.yml)) |
 | 1Password Connect Server | A running [1Password Connect Server](https://developer.1password.com/docs/connect/get-started/) reachable from the Ansible control node |
 | 1Password Connect Token | A service-account token with **read/write** access to the target vault |
+
+Target hosts must be in the RedHat OS family (`ansible_os_family == "RedHat"`).
 
 Install the required collection before running the role:
 
@@ -40,7 +42,8 @@ ansible-galaxy collection install -r requirements.yml
 1. **Generates** a cryptographically random password of the configured length.
 2. **Hashes** the password with SHA-512.
 3. **Applies** the hashed password to the `root` system account using `ansible.builtin.user`.
-4. **Upserts** a Login item in 1Password (via `onepassword.connect.item`) containing:
+4. **Verifies** that the root password hash changed on the target host.
+5. **Upserts** a Login item in 1Password (via `onepassword.connect.item`) containing:
    - `username` – `root`
    - `password` – the plain-text password (stored as a concealed field)
    - `hostname` – `{{ inventory_hostname }}`

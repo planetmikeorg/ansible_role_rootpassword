@@ -9,7 +9,7 @@ driver:
 
 platforms:
   - name: instance
-    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    image: geerlingguy/docker-rockylinux9-ansible:latest
     command: /lib/systemd/systemd
     privileged: true
     pre_build_image: true

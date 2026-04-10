@@ -11,5 +11,5 @@ onepassword_vault: "{{ lookup('env', 'OP_VAULT') | default('Private', true) }}"
 # Title of the 1Password Login/Password item to create or update
 onepassword_item_title: "Root Password - {{ inventory_hostname }}"
 
-# Length of the generated root password
+# Length of the generated root password (minimum validated in tasks)
 rootpassword_length: 32

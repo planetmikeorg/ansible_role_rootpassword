@@ -4,6 +4,13 @@
   become: true
 
   tasks:
+    - name: Verify target host is RHEL-family
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "RedHat"
+        fail_msg: "Molecule target is not a RedHat-family host"
+        success_msg: "Molecule target is RedHat-family"
+
     - name: Verify root account exists and password is set
       ansible.builtin.command: getent passwd root
       register: root_entry
@@ -30,5 +37,6 @@
           - root_shadow.stdout != "!"
           - root_shadow.stdout != "*"
           - root_shadow.stdout | length > 0
+          - root_shadow.stdout is regex('^\\$6\\$')
         fail_msg: "Root password is locked or not set"
-        success_msg: "Root password hash is present"
+        success_msg: "Root password hash is present and uses SHA-512"
